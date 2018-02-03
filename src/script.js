@@ -2,6 +2,9 @@
 
 import './style.scss';
 
+/* 
+    基本变量
+*/
 let canvas = document.getElementById('js-canvas');
 let ctx = canvas.getContext('2d');
 
@@ -13,6 +16,54 @@ let config = {
 ctx.lineCap = 'round';
 // 线条对象数组
 let lineList = [];
+
+/* 
+    初始化菜单栏
+*/
+const WIDTH_SET = [1, 2, 4, 8, 16];
+const COLOR_SET = ['#000000', '#555555', '#999999', '#0a67a3', '#3e97d1', '#8ec9ef', '#ff0000', '#f56c36', '#f8a881', '#407f1a', '#7ed616', '#ddec38', '#a15f9d', '#f580e3', '#ffff00', '#8a5025', '#ef934d', '#ffffff'];
+
+let initMenu = (function() {
+    let widthMenu = document.querySelector('#js-width_menu');
+    let widthFragment = document.createDocumentFragment();
+    for (let item of WIDTH_SET) {
+        let li = document.createElement('li');
+        li.className = 'dropdown-item';
+
+        let span = document.createElement('span');
+        span.className = 'circle';
+        span.style.width = item + 'px';
+        span.style.height = item + 'px';
+
+        widthFragment.appendChild(li);
+        li.appendChild(span);
+
+        li.addEventListener('click', function() {
+            config.width = item;
+        });
+    }
+    widthMenu.appendChild(widthFragment);
+
+    let colorMenu = document.querySelector('#js-color_menu');
+    let colorFragment = document.createDocumentFragment();
+    for (let item of COLOR_SET) {
+        let li = document.createElement('li');
+        li.className = 'dropdown-item';
+
+        let span = document.createElement('span');
+        span.className = 'circle';
+        span.style.background = item;
+
+        colorFragment.appendChild(li);
+        li.appendChild(span);
+
+        li.addEventListener('click', function() {
+            config.color = item;
+        });
+    }
+    colorMenu.appendChild(colorFragment);
+
+})();
 
 /* 
     绘制画布辅助线

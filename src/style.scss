@@ -1,5 +1,124 @@
-.canvas-container {
-    width: 800px;
-    margin: 100px auto;
-    cursor: crosshair;
+body {
+    margin: 0;
+    font-size: 16px;
+    .control-bar {
+        margin-top: 50px;
+        display: flex;
+        justify-content: center;
+        .dropdown {
+            margin: 0 10px;
+            &:hover {
+                .dropdown-list {
+                    display: block;
+                }
+            }
+            .control-bar-btn {
+                font-size: 1.2rem;
+                padding: 5px 0;
+                width: 80px;
+                background: rgb(212, 33, 138);
+                color: #fff;
+                cursor: pointer;
+                border: none;
+                box-shadow: 1px 1px 0 rgb(114, 12, 71), 2px 2px 0 rgb(114, 12, 71), 3px 3px 0 rgb(114, 12, 71);
+                border-radius: 2px;
+                outline: none;
+                &:hover {
+                    background: rgb(197, 23, 124);
+                    color: #fff;
+                }
+                &:active {
+                    transform: translate3d(2px, 2px ,0);
+                    box-shadow: 1px 1px 0 rgb(114, 12, 71);
+                }
+            }
+            .dropdown-list {
+                display: none;
+                position: absolute;
+                padding-top: 2px;
+                margin-left: -10px;
+                background: transparent;
+                &.strokewidth {
+                    width: 100px;
+                    .dropdown-list-inner {
+                        .dropdown-item {
+                            padding: 14px 0;
+                            cursor: pointer;
+                            &:hover {
+                                background: rgba(212, 33, 137, 0.637);
+                            }
+                            .circle {
+                                display: block;
+                                margin: auto;
+                                border-radius: 50%;
+                                background: #000;
+                            }
+                        }
+                    }
+                }
+                &.strokecolor {
+                    width: 150px;
+                    .dropdown-list-inner {
+                        display: flex;
+                        width: 100%;
+                        justify-content: space-around;
+                        flex-wrap: wrap;
+                        .dropdown-item {
+                            cursor: pointer;
+                            .circle {
+                                box-sizing: border-box;
+                                width: 40px;
+                                height: 40px;
+                                display: block;
+                                margin: 5px auto;
+                                border-radius: 50%;
+                                border: 2px #fff solid;
+                                box-shadow: rgba(0, 0,0, 0.15) 0 0 5px;
+                                &:hover {
+                                    box-shadow: rgba(0, 0,0, 0.6) 0 0 8px;
+                                }
+                            }
+                        }
+                    }
+                }
+                .dropdown-list-inner {
+                    background: #fff;
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                    margin-top: 10px;
+                    border: 1px solid rgb(129, 127, 127);
+                    border-radius: 2px;·
+                    &::before {
+                        content: '';
+                        display: block;
+                        position: absolute;
+                        border: 8px solid transparent;
+                        border-top-width: 0;
+                        border-bottom-color: rgb(129, 127, 127);
+                        top: 4px;
+                        left: 50%;
+                        margin-left: -8px;
+                    }
+                    &::after {
+                        content: '';
+                        display: block;
+                        position: absolute;
+                        border: 8px solid transparent;
+                        border-top-width: 0;
+                        border-bottom-color: #fff;
+                        top: 5px;
+                        left: 50%;
+                        margin-left: -8px;
+                    }
+
+                }
+            }
+        }
+    }
+    .canvas-container {
+        width: 800px;
+        margin: 50px auto;
+        cursor: crosshair;
+    }
 }

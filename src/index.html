@@ -1,14 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>DrawLine</title>
 </head>
+
 <body>
+    <div class="control-bar">
+        <div class="dropdown">
+            <button class="control-bar-btn">粗细</button>
+            <div class="dropdown-list strokewidth">
+                <ul id="js-width_menu" class="dropdown-list-inner">
+                </ul>
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="control-bar-btn">颜色</button>
+            <div class="dropdown-list strokecolor">
+                <ul id="js-color_menu" class="dropdown-list-inner">
+                </ul>
+            </div>
+        </div>
+    </div>
+    </div>
     <div class="canvas-container">
         <canvas id="js-canvas" width="900" height="600"></canvas>
     </div>
 </body>
+
 </html>

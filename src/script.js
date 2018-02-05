@@ -23,14 +23,26 @@ let config = {
 };
 ctx.lineCap = 'round';
 // 线条对象数组
-let lineList = [];
+const lineList = [];
+// 用于绘制的线条对象数组
+let lineListToDraw = lineList;
+// 辅助点
+let currPoint = [];
+
 
 /* 
     初始化菜单栏
 */
-const WIDTH_SET = [1, 2, 4, 8, 16];
-const COLOR_SET = ['#000000', '#555555', '#999999', '#0a67a3', '#3e97d1', '#8ec9ef', '#ff0000', '#f56c36', '#f8a881', '#407f1a', '#7ed616', '#ddec38', '#a15f9d', '#f580e3', '#ffff00', '#8a5025', '#ef934d', '#ffffff'];
-let initMenu = (function () {
+// 线条宽度
+const WIDTH_SET = [1, 2, 4, 8, 16, 32, 48];
+// 颜色（hsl）
+const COLOR_SET = [[0, 0, 0], [0, 0, 33], [0, 0, 60], [204, 88, 34], [204, 62, 53], [204, 75, 75], [5, 83, 53], [17, 91, 59], [20, 89, 74], [97, 66, 30], [88, 81, 46], [65, 83, 57], [304, 26, 50], [309, 85, 73], [60, 1, 5], [26, 58, 34], [26, 84, 62], [0, 0, 100]];
+
+/* 
+    初始化下拉列表
+*/
+let initDropdown = (function () {
+    // 宽度下拉列表
     let widthMenu = document.querySelector('#js-width_menu');
     let widthFragment = document.createDocumentFragment();
     for (let item of WIDTH_SET) {
@@ -51,6 +63,7 @@ let initMenu = (function () {
     }
     widthMenu.appendChild(widthFragment);
 
+    // 颜色下拉列表
     let colorBtn = document.querySelector('#js-color_btn');
     let colorMenu = document.querySelector('#js-color_menu');
     let colorFragment = document.createDocumentFragment();
@@ -60,15 +73,21 @@ let initMenu = (function () {
 
         let span = document.createElement('span');
         span.className = 'circle';
-        span.style.background = item;
+        span.style.background = `hsl(${item[0]}, ${item[1]}%, ${item[2]}%)`;
 
         colorFragment.appendChild(li);
         li.appendChild(span);
 
         li.addEventListener('click', function () {
-            config.color = item;
-            colorBtn.style.background = item;
-            if (item === '#ffffff') {
+            let color = `hsl(${item[0]}, ${item[1]}%, ${item[2]}%)`;
+            let darkerL = item[2] - 20 < 0 ? 0 : item[2] - 20;
+            let darkerColor = `hsl(${item[0]}, ${item[1]}%, ${darkerL}%)`;
+ 
+            config.color = color;
+            // 按钮颜色改变
+            colorBtn.style.background = color;
+            colorBtn.style.boxShadow = `1px 1px 0 ${darkerColor}, 2px 2px 0 ${darkerColor}, 3px 3px 0 ${darkerColor}`;
+            if (color == 'hsl(0, 0%, 100%)') {
                 colorBtn.style.color = '#000';
             } else {
                 colorBtn.style.color = '#fff';
@@ -80,12 +99,52 @@ let initMenu = (function () {
 })();
 
 /* 
-    下拉列表监听
+    按钮监听
 */
-let dropdownListener = (function () {
+let btnListener = (function () {
+    // 撤回按钮
+    let undoBtn = document.querySelector('#js-undo_btn');
+    undoBtn.addEventListener('click', function() {
+        lineList.pop();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey || e.metaKey && e.keyCode === 90) {
+            lineList.pop();
+        }
+    });
+
+    // 回放按钮
+    let playBtn = document.querySelector('#js-play_btn');
+    playBtn.addEventListener('click', function() {
+        let playLineList = [newLine()];
+        lineListToDraw = playLineList;
+        
+        let currLineIndex = 0;
+        let currPointIndex = 0;
+
+        let play = function() {
+            if (currLineIndex < lineList.length) {
+                let currPoint = lineList[currLineIndex].points[currPointIndex];
+                playLineList[playLineList.length - 1].addPoint(currPoint[0], currPoint[1]);
+                currPointIndex++;
+
+                if (currPointIndex >= lineList[currLineIndex].points.length - 1) {
+                    currLineIndex++;
+                    currPointIndex = 0;
+
+                    playLineList.push(newLine());
+                }
+
+                setTimeout(play, 30);
+            }
+        }
+
+        play();
+    });
+
+    // 颜色按钮
     let colorBtn = document.querySelector('#js-color_btn');
     let colorDropdown = document.querySelector('#js-color_dropdown');
-
     colorBtn.addEventListener('mouseover', function () {
         colorDropdown.classList.add('open');
     });
@@ -103,9 +162,9 @@ let dropdownListener = (function () {
             colorDropdown.classList.remove('open');
     });
 
+    // 宽度按钮
     let widthBtn = document.querySelector('#js-width_btn');
     let widthDropdown = document.querySelector('#js-width_dropdown');
-
     widthBtn.addEventListener('mouseover', function () {
         widthDropdown.classList.add('open');
     });
@@ -169,8 +228,11 @@ let newLine = function (x, y) {
     let line = Object.create(lineFn);
     line.width = config.width;
     line.color = config.color;
-
-    line.points = [[x, y]];
+    if (x && y) {
+        line.points = [[x, y]];
+    } else {
+        line.points = [];
+    }
 
     return line;
 };
@@ -187,60 +249,71 @@ let drawLine = function (line) {
     ctx.lineWidth = line.width;
 
     ctx.beginPath();
-    for (let i = 1, len = line.points.length; i < len - 1; i++) {
-        if (i === 1) {
-            line.points[i - 1][0] += vibrationX;
-            line.points[i - 1][1] += vibrationY;
-            line.points[i][0] += vibrationX;
-            line.points[i][1] += vibrationY;
-            line.points[i+1][0] += vibrationX;
-            line.points[i+1][1] += vibrationY;
-
-            startX = line.points[i - 1][0];
-            startY = line.points[i - 1][1];
-            controlX = line.points[i][0];
-            controlY = line.points[i][1];
-            endX = (line.points[i][0] + line.points[i + 1][0]) / 2;
-            endY = (line.points[i][1] + line.points[i + 1][1]) / 2;
+    if (line.points.length === 1) {
+        ctx.moveTo(line.points[0][0], line.points[0][1]);
+        ctx.lineTo(line.points[0][0], line.points[0][1])
+    }
+    else {
+        for (let i = 1, len = line.points.length; i < len - 1; i++) {
+            if (i === 1) {
+                startX = line.points[i - 1][0];
+                startY = line.points[i - 1][1];
+                controlX = line.points[i][0];
+                controlY = line.points[i][1];
+                endX = (line.points[i][0] + line.points[i + 1][0]) / 2;
+                endY = (line.points[i][1] + line.points[i + 1][1]) / 2;
+            }
+            else if (i === len - 1) {
+                line.points[i+1][0];
+                line.points[i+1][1];
+    
+                startX = endX;
+                startY = endY;
+                controlX = line.points[i][0];
+                controlY = line.points[i][1];
+                endX = line.points[i + 1][0];
+                endY = line.points[i + 1][0];
+            }
+            else {
+                line.points[i+1][0];
+                line.points[i+1][1];
+    
+                startX = endX;
+                startY = endY;
+                controlX = line.points[i][0];
+                controlY = line.points[i][1];
+                endX = (line.points[i][0] + line.points[i + 1][0]) / 2;
+                endY = (line.points[i][1] + line.points[i + 1][1]) / 2;
+            }
+    
+            // if (distenceBetween(startX, startY, endX, endY) > 2) {
+            //     vibrationX = (Math.random() - 0.5) * config.vibration;
+            //     vibrationY = (Math.random() - 0.5) * config.vibration;            
+            // }
+    
+            // controlX += vibrationX;
+            // controlY += vibrationY;
+            // endX += vibrationX;
+            // endY += vibrationY;
+    
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(controlX, controlY, endX, endY);
         }
-        else if (i === len - 1) {
-            line.points[i+1][0] += vibrationX;
-            line.points[i+1][1] += vibrationY;
-
-            startX = endX;
-            startY = endY;
-            controlX = line.points[i][0];
-            controlY = line.points[i][1];
-            endX = line.points[i + 1][0];
-            endY = line.points[i + 1][0];
-        }
-        else {
-            line.points[i+1][0] += vibrationX;
-            line.points[i+1][1] += vibrationY;
-
-            startX = endX;
-            startY = endY;
-            controlX = line.points[i][0];
-            controlY = line.points[i][1];
-            endX = (line.points[i][0] + line.points[i + 1][0]) / 2;
-            endY = (line.points[i][1] + line.points[i + 1][1]) / 2;
-        }
-
-        if (distenceBetween(startX, startY, endX, endY) > 2) {
-            vibrationX = (Math.random() - 0.5) * config.vibration;
-            vibrationY = (Math.random() - 0.5) * config.vibration;            
-        }
-
-        // controlX += vibrationX;
-        // controlY += vibrationY;
-        // endX += vibrationX;
-        // endY += vibrationY;
-
-        ctx.moveTo(startX, startY);
-        ctx.quadraticCurveTo(controlX, controlY, endX, endY);
     }
     ctx.stroke();
 };
+
+/* 
+    绘制鼠标当前辅助绘制点
+*/
+let drawPoint = function() {
+    if (currPoint.length) {
+        ctx.beginPath();
+        ctx.arc(currPoint[0], currPoint[1], config.width / 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fill();
+    }
+}
 
 /* 
     鼠标监听
@@ -269,12 +342,18 @@ let attachDrawListener = function () {
         }
     })();
     let endDraw = function (e) {
+        currPoint = [];
         canvas.removeEventListener('mousemove', drawing);
+    }
+
+    let movePoint = function(e) {
+        currPoint = [e.offsetX, e.offsetY];
     }
 
     canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mouseup', endDraw);
     canvas.addEventListener('mouseout', endDraw);
+    canvas.addEventListener('mousemove', movePoint);
 }
 
 /* 
@@ -285,9 +364,11 @@ let paint = function () {
 
     drawGuideline();
 
-    for (let line of lineList) {
+    for (let line of lineListToDraw) {
         drawLine(line);
     }
+
+    drawPoint();
 }
 
 /* 

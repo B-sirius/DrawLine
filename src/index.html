@@ -14,7 +14,7 @@
             <button id="js-undo_btn" class="control-bar-btn">撤回</button>
         </div>
         <div class="btn">
-            <button id="js-play_btn" class="control-bar-btn">回放</button>
+            <button id="js-playback_btn" class="control-bar-btn">回放</button>
         </div>
         <div class="btn">
             <button id="js-width_btn" class="control-bar-btn">粗细</button>
@@ -26,7 +26,7 @@
         <div class="btn">
             <button id="js-color_btn" class="control-bar-btn">颜色</button>
             <div id="js-color_dropdown" class="dropdown-list strokecolor">
-                <ul id="js-color_menu" class="dropdown-list-inner">
+                <ul id="js-color_list" class="dropdown-list-inner">
                 </ul>
             </div>
         </div>
@@ -34,9 +34,10 @@
     <div class="canvas-container">
         <canvas id="js-canvas" width="900" height="500"></canvas>
     </div>
-    <div class="progress-container">
+    <div id="js-progress_container" class="progress-container">
         <div class="progress-bar"></div>
-        <div class="progress-btn"></div>
+        <div id="js-progress_bar" class="progress-inner_bar"></div>        
+        <div id="js-progress_btn" class="progress-btn"></div>
     </div>
 </body>
 

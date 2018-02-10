@@ -117,7 +117,7 @@ body {
         }
     }
     .canvas-container {
-        width: 800px;
+        width: 900px;
         margin: 50px auto;
         cursor: crosshair;
     }
@@ -126,7 +126,7 @@ body {
         position: relative;
         margin: auto;
         margin-top: 30px;
-        width: 800px;
+        width: 900px;
         transition: 0.3s;
         .progress-bar {
             width: 100%;
@@ -155,7 +155,7 @@ body {
             border: 2px solid #fff;
             box-shadow: 0 1px 4px rgba(0, 0,0, 0.5);
             transform: translate3d(-10px , -15px, 0);            
-            
+            cursor: pointer;
         }
     }
 }

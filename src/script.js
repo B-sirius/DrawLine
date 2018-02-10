@@ -1,6 +1,7 @@
 'use strict';
 
 import './style.scss';
+import { start } from 'pretty-error';
 
 let DrawLine = {
     $: {
@@ -31,7 +32,7 @@ let DrawLine = {
         currProgress: 0, // 回放下的进度
         WIDTH_SET: [1, 2, 4, 8, 16, 32, 48],
         COLOR_SET: [[0, 0, 0], [0, 0, 33], [0, 0, 60], [204, 88, 34], [204, 62, 53], [204, 75, 75], [5, 83, 53], [17, 91, 59], [20, 89, 74], [97, 66, 30], [88, 81, 46], [65, 83, 57], [304, 26, 50], [309, 85, 73], [60, 1, 5], [26, 58, 34], [26, 84, 62], [0, 0, 100]],
-
+        playbackMode: false
     },
     ctx: null,
     init() {
@@ -97,7 +98,7 @@ let DrawLine = {
         DrawLine.$.colorList.appendChild(fragment);
     },
     _listenPlayback() {
-        let isPlayback = false;
+        let isPlayingBack = false;
         let timeoutId = null;
 
         let updateProgress = function () {
@@ -112,24 +113,44 @@ let DrawLine = {
 
             DrawLine.data.progressCount++;
         }
-
-        let playback = function() {
+        let playback = function () {
             let progressCount = DrawLine.data.progressCount;
-            let totalCount = DrawLine.data.totalCount;            
+            let totalCount = DrawLine.data.totalCount;
 
-            if (!isPlayback || progressCount > totalCount) {
+            if (!isPlayingBack || progressCount > totalCount) {
                 return;
             }
 
             DrawLine.$.progressBtn.style.left = progressCount / totalCount * 100 + '%';
-            DrawLine.$.progressBar.style.width = progressCount / totalCount * 100 + '%';            
+            DrawLine.$.progressBar.style.width = progressCount / totalCount * 100 + '%';
             updateProgress();
 
             requestAnimationFrame(playback);
         }
 
+        let startDrag = function () {
+            isPlayingBack = false;
+            document.addEventListener('mousemove', drag);
+        }
+        let endDrag = function () {
+            isPlayingBack = true;
+            playback();
+            document.removeEventListener('mousemove', drag);
+        };
+        let drag = function (e) {
+            console.log(e.offsetX);
+            console.log(e.offsetY);
+        }
+
         DrawLine.$.playbackBtn.addEventListener('click', function () {
-            isPlayback = true;
+            if (isPlayingBack) {
+                DrawLine.data.progressCount = 0;
+                return;
+            }
+
+            DrawLine.data.playbackMode = true;
+
+            isPlayingBack = true;
 
             DrawLine.data.progressCount = 0;
 
@@ -137,13 +158,26 @@ let DrawLine = {
 
             playback();
         });
+        DrawLine.$.canvas.addEventListener('mousedown', function () {
+            if (DrawLine.data.playbackMode) {
+                DrawLine.data.playbackMode = false;
+                isPlayingBack = false;
+    
+                DrawLine.data.progressCount = Infinity;
+    
+                DrawLine.$.progressContainer.style.opacity = 0
+    
+                DrawLine.$.progressBtn.removeEventListener('mousedown', startDrag);
+                document.removeEventListener('mouseup', endDrag);
 
-        DrawLine.$.canvas.addEventListener('mousedown', function() {
-            isPlayback = false;
-
-            DrawLine.data.progressCount = Infinity;
-
-            DrawLine.$.progressContainer.style.opacity = 0;
+                console.log("shit");
+            }
+        });
+        DrawLine.$.progressBtn.addEventListener('mousedown', startDrag);
+        document.addEventListener('mouseup', function() {
+            if (DrawLine.data.playbackMode) {
+                endDrag();
+            }
         });
     },
     _listenUndo() {
@@ -197,11 +231,16 @@ let DrawLine = {
         });
     },
     _listenDraw() {
+        let isMousedown = false;
+
         let startDraw = function (e) {
             let line = DrawLine.newLine(e.offsetX, e.offsetY);
             DrawLine.data.lineList.push(line);
 
-            DrawLine.$.canvas.addEventListener('mousemove', drawing);
+            DrawLine.$.canvas.addEventListener('mousemove', function (e) {
+                if (isMousedown)
+                    drawing(e);
+            });
         };
 
         let drawing = (function () {
@@ -223,7 +262,7 @@ let DrawLine = {
             }
         })();
 
-        let endDraw = function (e) {
+        let endDraw = function () {
             DrawLine.data.currPoint = [];
             DrawLine.$.canvas.removeEventListener('mousemove', drawing);
         }
@@ -232,9 +271,19 @@ let DrawLine = {
             DrawLine.data.currPoint = [e.offsetX, e.offsetY];
         }
 
-        DrawLine.$.canvas.addEventListener('mousedown', startDraw);
-        DrawLine.$.canvas.addEventListener('mouseup', endDraw);
-        DrawLine.$.canvas.addEventListener('mouseout', endDraw);
+        DrawLine.$.canvas.addEventListener('mousedown', function (e) {
+            isMousedown = true;
+            startDraw(e);
+        });
+        document.addEventListener('mouseup', function () {
+            isMousedown = false;
+            endDraw();
+        });
+        DrawLine.$.canvas.addEventListener('mouseenter', function (e) {
+            if (isMousedown)
+                startDraw(e);
+        })
+        DrawLine.$.canvas.addEventListener('mouseleave', endDraw);
         DrawLine.$.canvas.addEventListener('mousemove', movePoint);
     },
     _drawGuideline() {

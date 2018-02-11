@@ -99,6 +99,7 @@ let DrawLine = {
     },
     _listenPlayback() {
         let isPlayingBack = false;
+        let isDraging = false;
         let timeoutId = null;
 
         let updateProgress = function () {
@@ -118,6 +119,7 @@ let DrawLine = {
             let totalCount = DrawLine.data.totalCount;
 
             if (!isPlayingBack || progressCount > totalCount) {
+                isPlayingBack = false;
                 return;
             }
 
@@ -130,16 +132,26 @@ let DrawLine = {
 
         let startDrag = function () {
             isPlayingBack = false;
+            isDraging = true;
             document.addEventListener('mousemove', drag);
         }
         let endDrag = function () {
             isPlayingBack = true;
+            isDraging = false;
             playback();
             document.removeEventListener('mousemove', drag);
         };
         let drag = function (e) {
-            console.log(e.offsetX);
-            console.log(e.offsetY);
+            let left = e.clientX - DrawLine.$.progressBar.getBoundingClientRect().left;
+            if (left < 0)
+                left = 0;
+            else if (left > DrawLine.$.canvas.width)
+                left = DrawLine.$.canvas.width;
+
+            DrawLine.$.progressBtn.style.left = left + 'px';
+            DrawLine.$.progressBar.style.width = left + 'px';
+
+            DrawLine.data.progressCount = Math.floor(left / DrawLine.$.canvas.width * DrawLine.data.totalCount);
         }
 
         DrawLine.$.playbackBtn.addEventListener('click', function () {
@@ -169,13 +181,11 @@ let DrawLine = {
     
                 DrawLine.$.progressBtn.removeEventListener('mousedown', startDrag);
                 document.removeEventListener('mouseup', endDrag);
-
-                console.log("shit");
             }
         });
         DrawLine.$.progressBtn.addEventListener('mousedown', startDrag);
         document.addEventListener('mouseup', function() {
-            if (DrawLine.data.playbackMode) {
+            if (DrawLine.data.playbackMode && isDraging) {
                 endDrag();
             }
         });
